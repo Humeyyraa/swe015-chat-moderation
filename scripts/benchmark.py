@@ -87,10 +87,25 @@ def main():
         print(f"{name:24s} macro-F1={row['macro_f1']:.4f}  size={row['size_mb']:8.2f} MB  "
               f"latency={row['latency_mean_ms']:7.2f} ms (p95 {row['latency_p95_ms']:.2f})")
 
+    # Agreement checks: PyTorch vs ONNX (runtime only) and FP32 vs INT8 (quantization only)
+    agreement = []
+    for a, b in [("BERTurk (PyTorch)", "BERTurk FP32 (ONNX)"),
+                 ("BERTurk FP32 (ONNX)", "BERTurk INT8 (ONNX)")]:
+        if a in preds and b in preds:
+            pa, pb = np.asarray(preds[a]), np.asarray(preds[b])
+            la = pa >= models[a].threshold
+            lb = pb >= models[b].threshold
+            d = np.abs(pa - pb)
+            agreement.append({"a": a, "b": b, "same_label_pct": round(float((la == lb).mean() * 100), 2),
+                              "mean_abs_prob_diff": round(float(d.mean()), 4),
+                              "max_abs_prob_diff": round(float(d.max()), 4)})
+            print(f"[agreement] {a} vs {b}: same label on {agreement[-1]['same_label_pct']}% of test messages, "
+                  f"mean |dP|={d.mean():.4f}, max |dP|={d.max():.4f}")
+
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     (RESULTS_DIR / "results.json").write_text(json.dumps(
         {"hardware": hw, "test_size": len(test), "latency_budget_ms": LATENCY_BUDGET_MS,
-         "models": rows}, indent=2, ensure_ascii=False))
+         "models": rows, "agreement": agreement}, indent=2, ensure_ascii=False))
 
     df = pd.DataFrame(rows)
     lines = [
@@ -105,6 +120,11 @@ def main():
         lines.append(f"| {r['model']} | {r['precision']} | {r['macro_f1']:.4f} | {r['accuracy']:.4f} | "
                      f"{r['f1_OFF']:.4f} | {r['size_mb']:.2f} | {r['latency_mean_ms']:.2f} | "
                      f"{r['latency_p95_ms']:.2f} | {'yes' if r['within_budget'] else 'no'} |")
+    if agreement:
+        lines += ["", "| Comparison | Same label (%) | Mean abs. P diff | Max abs. P diff |", "|---|---|---|---|"]
+        for g in agreement:
+            lines.append(f"| {g['a']} vs {g['b']} | {g['same_label_pct']} | "
+                         f"{g['mean_abs_prob_diff']} | {g['max_abs_prob_diff']} |")
     (RESULTS_DIR / "results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 
