@@ -1,6 +1,6 @@
 """Real-time chat moderation demo (Gradio).
 
-Every message is labelled live (clean / offensive) with a confidence score,
+Every message is labelled live (clean / offensive) with its confidence P(offensive),
 flagged messages are masked, and a side panel logs the response time of every
 message and lets the user switch between models. The default model is the
 quantized Transformer (BERTurk, dynamic INT8, ONNX Runtime, CPU).
@@ -24,8 +24,11 @@ from src.lexicon import Lexicon
 from src.predictors import load_all
 
 DEFAULT_MODEL = "BERTurk INT8 (ONNX)"
-LOG_COLS = ["#", "time", "model", "label", "confidence", "latency (ms)", f"≤ {LATENCY_BUDGET_MS:.0f} ms"]
-CMP_COLS = ["model", "precision", "label", "confidence", "latency (ms)"]
+SHORT = {"Lexicon + edit distance": "Lexicon", "tf-idf + LogReg": "tf-idf",
+         "word2vec + FFN": "w2v+FFN", "BERTurk (PyTorch)": "BERT FP32",
+         "BERTurk INT8 (ONNX)": "BERT INT8"}
+LOG_COLS = ["#", "model", "label", "P(off)", "ms", f"≤{LATENCY_BUDGET_MS:.0f}ms"]
+CMP_COLS = ["model", "label", "P(off)", "threshold", "ms"]
 EXAMPLES = [
     "iyi oyundu kanka, yarın tekrar atalım mı?",
     "sen ne salak bir oyuncusun ya",
@@ -43,12 +46,12 @@ LEX = Lexicon()
 
 
 def classify(name, text):
+    """Returns (is_offensive, P(offensive), latency in ms) for one message."""
     m = MODELS[name]
     t0 = time.perf_counter()
     p = m.predict_proba(text)
     ms = (time.perf_counter() - t0) * 1000
-    off = p >= m.threshold
-    return off, (p if off else 1 - p), ms
+    return p >= m.threshold, p, ms
 
 
 def masked(text):
@@ -69,8 +72,9 @@ def bubble(msg):
         f"<div style='font-size:15px'>{body}</div>"
         f"<div style='margin-top:6px;font-size:12px'>"
         f"<span style='background:{color};color:white;padding:2px 8px;border-radius:8px;font-weight:600'>"
-        f"{label} {msg['conf']:.0%}</span>"
-        f"<span style='opacity:.7'> &nbsp;{msg['ms']:.1f} ms · {html.escape(msg['model'])}</span></div></div>"
+        f"{label}</span>"
+        f"<span style='opacity:.8'> &nbsp;P(offensive) = {msg['p']:.2f} · threshold {msg['th']:.2f}"
+        f" · {msg['ms']:.1f} ms · {html.escape(msg['model'])}</span></div></div>"
     )
 
 
@@ -82,7 +86,7 @@ def render(chat):
 
 
 def stats(log, model):
-    ms = [r[5] for r in log if r[2] == model]
+    ms = [r[4] for r in log if r[1] == SHORT.get(model, model)]
     if not ms:
         return f"**Latency budget:** {LATENCY_BUDGET_MS:.0f} ms / message (CPU)"
     avg = sum(ms) / len(ms)
@@ -95,16 +99,17 @@ def send(text, model, compare, chat, log):
     text = (text or "").strip()
     if not text:
         return "", render(chat), chat, log, pd.DataFrame(log, columns=LOG_COLS), gr.update(), stats(log, model)
-    off, conf, ms = classify(model, text)
-    chat = chat + [{"original": text, "shown": masked(text) if off else text,
-                    "off": off, "conf": conf, "ms": ms, "model": model}]
-    log = log + [[len(log) + 1, time.strftime("%H:%M:%S"), model, "OFF" if off else "NOT",
-                  round(conf, 3), round(ms, 2), "yes" if ms <= LATENCY_BUDGET_MS else "no"]]
+    off, p, ms = classify(model, text)
+    chat = chat + [{"original": text, "shown": masked(text) if off else text, "off": off,
+                    "p": p, "th": MODELS[model].threshold, "ms": ms, "model": model}]
+    log = log + [[len(log) + 1, SHORT.get(model, model), "OFF" if off else "NOT",
+                  round(p, 2), round(ms, 1), "✓" if ms <= LATENCY_BUDGET_MS else "✗"]]
     cmp_rows = []
     if compare:
         for name, m in MODELS.items():
-            o, c, t = classify(name, text)
-            cmp_rows.append([name, m.precision, "OFF" if o else "NOT", round(c, 3), round(t, 2)])
+            o, q, t = classify(name, text)
+            cmp_rows.append([SHORT.get(name, name), "OFF" if o else "NOT", round(q, 2),
+                             m.threshold, round(t, 1)])
     return ("", render(chat), chat, log, pd.DataFrame(log[::-1], columns=LOG_COLS),
             pd.DataFrame(cmp_rows, columns=CMP_COLS), stats(log, model))
 
@@ -116,7 +121,8 @@ def clear():
 with gr.Blocks(title="SWE015 - Real-time chat moderation") as demo:
     gr.Markdown("## 🎮 Real-time chat moderation (Turkish)\n"
                 "Each message is classified live as **clean** or **offensive**. "
-                "Offensive messages are masked. Default model: **BERTurk, dynamic INT8, ONNX Runtime on CPU**.")
+                "Offensive messages are masked. Default model: **BERTurk, dynamic INT8, ONNX Runtime on CPU**.  \n"
+                "A message is OFFENSIVE when P(offensive) ≥ the model's threshold (tuned on the validation set).")
     chat_state, log_state = gr.State([]), gr.State([])
     with gr.Row():
         with gr.Column(scale=3):
