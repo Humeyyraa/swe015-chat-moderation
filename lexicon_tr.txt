@@ -1,0 +1,94 @@
+# Turkish offensive-word lexicon for the rule baseline (hand-written seed list).
+# All entries are lowercase and ASCII-folded (s for ş, i for ı, ...), the same
+# form produced by src/normalize.py.
+#
+#   word   -> PREFIX root: matches the root plus any suffix (salak -> salaksin)
+#   =word  -> EXACT word only: for short or ambiguous roots, e.g. "got"
+#             would otherwise match "goturmek" (to carry) after folding
+#
+# Fuzzy matching (minimum edit distance <= 1) is applied to entries with 6+ letters.
+#
+# --- profanity ---
+=amk
+=aq
+=amq
+=mk
+=amina
+=aminakoyim
+=aminakoydugum
+amcik
+orospu
+orosbu
+=oc
+=pic
+=pice
+=picler
+piclik
+=sik
+=sikik
+=siktir
+=siktirgit
+=sikerim
+=sikeyim
+=siktim
+=siktigim
+=sikimin
+=sikim
+yarrak
+yarak
+yarram
+dalyarak
+=got
+=gote
+=gotu
+=gotun
+=gotune
+=gotunu
+gotveren
+gotlek
+ibne
+pezevenk
+kahpe
+kaltak
+surtuk
+kevase
+gavat
+pust
+yavsak
+tasak
+=dol
+anani
+=anan
+=ananin
+=bacini
+sokayim
+sokarim
+kancik
+# --- insults ---
+serefsiz
+haysiyetsiz
+namussuz
+aptal
+salak
+gerizekali
+dangalak
+ahmak
+hiyar
+embesil
+beyinsiz
+angut
+andaval
+mankafa
+denyo
+hoduk
+lavuk
+zibidi
+asagilik
+pislik
+=mal
+=ezik
+=adi
+=esek
+=essek
+=it
+=kopek
