@@ -1,0 +1,24 @@
+{
+  "base_model": "dbmdz/bert-base-turkish-cased",
+  "epoch": 1,
+  "threshold": 0.36,
+  "max_len": 128,
+  "lr": 2e-05,
+  "batch_size": 32,
+  "val": {
+    "macro_f1": 0.8386815387165711,
+    "accuracy": 0.9020780856423174,
+    "f1_NOT": 0.9398103348171086,
+    "f1_OFF": 0.7375527426160338,
+    "confusion_matrix": [
+      [
+        2428,
+        135
+      ],
+      [
+        176,
+        437
+      ]
+    ]
+  }
+}

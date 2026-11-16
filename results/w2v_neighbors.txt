@@ -1,0 +1,8 @@
+salak: gecerlidir (0.73), oldugunuzda (0.71), uygunu (0.60), uzulecek (0.59), muslumansin (0.57), merci (0.56), koymaya (0.56), yapmislardir (0.56)
+aptal: istihareye (0.59), akrabalariniz (0.59), konulmak (0.59), danla (0.57), sems (0.56), yapmayalim (0.56), ayarlari (0.55), eksigin (0.54)
+mac: mactir (0.69), oynayamiyor (0.66), verilmesin (0.66), fbtv (0.65), goremeyecek (0.64), superlig (0.64), bursasporlu (0.62), roco (0.62)
+guzel: seylerde (0.60), damlayana (0.60), annesin (0.59), downsendromufarkindalikgunu (0.59), iconum (0.58), uyumu (0.58), sicagi (0.56), kapliyor (0.56)
+galatasaray: transferde (0.67), koruyucusu (0.67), fatihterim (0.65), birkez (0.64), leverkusen (0.61), kon2antra2yon (0.60), kupa (0.59), dusecekti (0.59)
+hoca: ozdes (0.58), ezberi (0.56), nasrettin (0.56), erbakan (0.56), ferdiyi (0.56), terime (0.53), oynatmak (0.52), suresinde (0.52)
+kanka: walla (0.59), olsaydik (0.57), heval (0.55), istiyonuz (0.55), neys (0.54), geleceksin (0.53), yakup (0.51), gidiyom (0.51)
+seni: kiskaniyorsamsana (0.66), kisitlamissamsana (0.65), bagiriyorsamseni (0.64), selma (0.63), soruyorsamseni (0.62), ozledim (0.62), vazgecebilirim (0.62), sahiplenmissem (0.62)

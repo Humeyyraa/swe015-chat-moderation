@@ -1,0 +1,7 @@
+{
+  "threshold_fp32": 0.36,
+  "threshold_int8": 0.33,
+  "quantization": "onnxruntime.quantization.quantize_dynamic, weights QInt8",
+  "val_macro_f1_fp32": 0.8386815387165711,
+  "val_macro_f1_int8": 0.8347467033554048
+}

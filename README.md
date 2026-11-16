@@ -18,7 +18,19 @@ response time of every message and lets the user switch between models.
 | 4 | BERTurk, ONNX Runtime, dynamic INT8 quantization | D |
 
 All models are evaluated on the **same held-out test set** (official
-OffensEval-TR 2020 test set, 3,528 tweets). Results: [`results/results.md`](results/results.md).
+OffensEval-TR 2020 test set, 3,528 tweets). Full results: [`results/results.md`](results/results.md).
+
+| Model | Macro-F1 | Size (MB) | Latency (ms, mean) | ≤ 50 ms |
+|---|---|---|---|---|
+| Lexicon + edit distance | 0.6618 | 0.00 | 3.52 | yes |
+| tf-idf + LogReg | 0.7695 | 2.70 | 1.94 | yes |
+| word2vec + FFN | 0.6894 | 11.51 | 0.40 | yes |
+| BERTurk FP32 (PyTorch) | 0.8089 | 422.00 | 126.87 | no |
+| BERTurk FP32 (ONNX Runtime) | 0.8089 | 422.17 | 66.92 | no |
+| **BERTurk INT8 (ONNX Runtime)** | **0.8106** | **106.20** | **39.27** | **yes** |
+
+Hardware: Intel Xeon @ 2.00 GHz, 2 logical cores (Google Colab), CPU only, batch
+size 1, mean over all 3,528 test messages after 10 warm-up runs.
 Architecture: [`docs/architecture.md`](docs/architecture.md).
 
 ## Run the application
@@ -33,7 +45,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open http://127.0.0.1:7860. On the first start the trained weights (a few hundred MB)
+Open http://127.0.0.1:7860. On the first start the trained weights (~540 MB)
 are downloaded from the Hugging Face Hub:
 https://huggingface.co/humeyrakoctemiz/swe015-chat-moderation
 

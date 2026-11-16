@@ -1,0 +1,181 @@
+{
+  "hardware": {
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.00GHz",
+    "logical_cores": 2,
+    "os": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "python": "3.13.16",
+    "torch": "2.14.1+cu130",
+    "torch_threads": 1,
+    "onnxruntime": "1.32.0"
+  },
+  "test_size": 3528,
+  "latency_budget_ms": 50.0,
+  "models": [
+    {
+      "model": "Lexicon + edit distance",
+      "technique": "B: regex + min. edit distance",
+      "precision": "rules",
+      "macro_f1": 0.6618,
+      "accuracy": 0.8353,
+      "f1_OFF": 0.4196,
+      "size_mb": 0.0,
+      "latency_mean_ms": 3.52,
+      "latency_p50_ms": 2.68,
+      "latency_p95_ms": 8.49,
+      "runs": 3528,
+      "threshold": 0.5,
+      "within_budget": true,
+      "confusion_matrix": [
+        [
+          2737,
+          75
+        ],
+        [
+          506,
+          210
+        ]
+      ]
+    },
+    {
+      "model": "tf-idf + LogReg",
+      "technique": "B: tf-idf + logistic regression",
+      "precision": "FP64",
+      "macro_f1": 0.7695,
+      "accuracy": 0.86,
+      "f1_OFF": 0.6252,
+      "size_mb": 2.7,
+      "latency_mean_ms": 1.94,
+      "latency_p50_ms": 1.84,
+      "latency_p95_ms": 2.85,
+      "runs": 3528,
+      "threshold": 0.59,
+      "within_budget": true,
+      "confusion_matrix": [
+        [
+          2622,
+          190
+        ],
+        [
+          304,
+          412
+        ]
+      ]
+    },
+    {
+      "model": "word2vec + FFN",
+      "technique": "A: own word2vec + feedforward NN (SGD)",
+      "precision": "FP32",
+      "macro_f1": 0.6894,
+      "accuracy": 0.816,
+      "f1_OFF": 0.491,
+      "size_mb": 11.51,
+      "latency_mean_ms": 0.4,
+      "latency_p50_ms": 0.37,
+      "latency_p95_ms": 0.63,
+      "runs": 3528,
+      "threshold": 0.61,
+      "within_budget": true,
+      "confusion_matrix": [
+        [
+          2566,
+          246
+        ],
+        [
+          403,
+          313
+        ]
+      ]
+    },
+    {
+      "model": "BERTurk (PyTorch)",
+      "technique": "C: fine-tuned BERTurk",
+      "precision": "FP32",
+      "macro_f1": 0.8089,
+      "accuracy": 0.8778,
+      "f1_OFF": 0.6941,
+      "size_mb": 422.0,
+      "latency_mean_ms": 126.87,
+      "latency_p50_ms": 118.66,
+      "latency_p95_ms": 184.2,
+      "runs": 3528,
+      "threshold": 0.36,
+      "within_budget": false,
+      "confusion_matrix": [
+        [
+          2608,
+          204
+        ],
+        [
+          227,
+          489
+        ]
+      ]
+    },
+    {
+      "model": "BERTurk FP32 (ONNX)",
+      "technique": "C: BERTurk exported to ONNX",
+      "precision": "FP32",
+      "macro_f1": 0.8089,
+      "accuracy": 0.8778,
+      "f1_OFF": 0.6941,
+      "size_mb": 422.17,
+      "latency_mean_ms": 66.92,
+      "latency_p50_ms": 55.9,
+      "latency_p95_ms": 128.4,
+      "runs": 3528,
+      "threshold": 0.36,
+      "within_budget": false,
+      "confusion_matrix": [
+        [
+          2608,
+          204
+        ],
+        [
+          227,
+          489
+        ]
+      ]
+    },
+    {
+      "model": "BERTurk INT8 (ONNX)",
+      "technique": "D: dynamic INT8 quantization",
+      "precision": "INT8 (dynamic)",
+      "macro_f1": 0.8106,
+      "accuracy": 0.8784,
+      "f1_OFF": 0.6972,
+      "size_mb": 106.2,
+      "latency_mean_ms": 39.27,
+      "latency_p50_ms": 32.4,
+      "latency_p95_ms": 84.43,
+      "runs": 3528,
+      "threshold": 0.33,
+      "within_budget": true,
+      "confusion_matrix": [
+        [
+          2605,
+          207
+        ],
+        [
+          222,
+          494
+        ]
+      ]
+    }
+  ],
+  "agreement": [
+    {
+      "a": "BERTurk (PyTorch)",
+      "b": "BERTurk FP32 (ONNX)",
+      "same_label_pct": 100.0,
+      "mean_abs_prob_diff": 0.0,
+      "max_abs_prob_diff": 0.0001
+    },
+    {
+      "a": "BERTurk FP32 (ONNX)",
+      "b": "BERTurk INT8 (ONNX)",
+      "same_label_pct": 98.98,
+      "mean_abs_prob_diff": 0.0107,
+      "max_abs_prob_diff": 0.1891
+    }
+  ]
+}
