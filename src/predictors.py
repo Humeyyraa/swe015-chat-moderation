@@ -70,7 +70,8 @@ class W2VFFNPredictor:
         self.torch = torch
         meta = _meta(W2V_DIR)
         itos = json.loads((W2V_DIR / "vocab.json").read_text(encoding="utf-8"))
-        self.feat = Featurizer(itos, np.load(W2V_DIR / "vectors.npy"))
+        sc = np.load(W2V_DIR / "scaler.npz")
+        self.feat = Featurizer(itos, np.load(W2V_DIR / "vectors.npy"), sc["mean"], sc["std"])
         self.model = FFN(meta["in_dim"])
         self.model.load_state_dict(torch.load(W2V_DIR / "ffn.pt", map_location="cpu"))
         self.model.eval()
@@ -82,7 +83,8 @@ class W2VFFNPredictor:
             return float(self.torch.softmax(self.model(x), -1)[0, 1])
 
     def size_mb(self):
-        return _size_mb([W2V_DIR / "vectors.npy", W2V_DIR / "vocab.json", W2V_DIR / "ffn.pt"])
+        return _size_mb([W2V_DIR / "vectors.npy", W2V_DIR / "vocab.json", W2V_DIR / "ffn.pt",
+                         W2V_DIR / "scaler.npz"])
 
 
 class BertTorchPredictor:

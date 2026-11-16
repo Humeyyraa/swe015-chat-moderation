@@ -46,7 +46,8 @@ def main():
 
     # ---- 2. features ----
     feat = Featurizer(itos, vectors)
-    Xtr, Xva = feat.batch(train["text"]), feat.batch(val["text"])
+    Xtr = feat.fit_scaler(feat.raw_batch(train["text"])).astype(np.float32)
+    Xva = feat.batch(val["text"])
     ytr = torch.tensor(train["label"].values)
 
     # ---- 3. feedforward network, SGD + backpropagation ----
@@ -85,6 +86,7 @@ def main():
     np.save(W2V_DIR / "vectors.npy", vectors)
     (W2V_DIR / "vocab.json").write_text(json.dumps(itos, ensure_ascii=False))
     torch.save(state, W2V_DIR / "ffn.pt")
+    np.savez(W2V_DIR / "scaler.npz", mean=feat.mean, std=feat.std)
     p = predict_proba(model, Xva)
     meta = {"in_dim": int(Xtr.shape[1]), "threshold": th, "best_epoch": ep,
             "val": report(val["label"], (p >= th).astype(int))}

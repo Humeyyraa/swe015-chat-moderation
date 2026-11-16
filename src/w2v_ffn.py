@@ -56,7 +56,7 @@ def make_pairs(id_lists, freqs, window, rng, subsample=1e-4):
 
 
 def train_word2vec(token_lists, dim=100, window=5, negatives=5, epochs=5,
-                   batch_size=4096, lr=0.025, min_count=2, device="cpu", seed=42):
+                   batch_size=1024, lr=0.005, min_count=2, device="cpu", seed=42):
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
     itos, freqs = build_vocab(token_lists, min_count)
@@ -65,7 +65,8 @@ def train_word2vec(token_lists, dim=100, window=5, negatives=5, epochs=5,
 
     noise = torch.tensor(freqs ** 0.75 / (freqs ** 0.75).sum(), dtype=torch.float, device=device)
     model = SkipGramNS(len(itos), dim).to(device)
-    opt = torch.optim.SGD(model.parameters(), lr=lr)
+    # SparseAdam: Adam for sparse embedding gradients (only the rows used in a batch are updated)
+    opt = torch.optim.SparseAdam(list(model.parameters()), lr=lr)
 
     for ep in range(epochs):
         c, o = make_pairs(id_lists, freqs, window, rng)
@@ -74,9 +75,6 @@ def train_word2vec(token_lists, dim=100, window=5, negatives=5, epochs=5,
         total, steps = 0.0, 0
         n_batches = (len(c) + batch_size - 1) // batch_size
         for b in range(n_batches):
-            # linearly decaying learning rate, as in the original word2vec
-            for g in opt.param_groups:
-                g["lr"] = lr * max(1e-4, 1 - (ep * n_batches + b) / (epochs * n_batches))
             cb = c[b * batch_size:(b + 1) * batch_size].to(device)
             ob = o[b * batch_size:(b + 1) * batch_size].to(device)
             nb = torch.multinomial(noise, cb.numel() * negatives, replacement=True).view(-1, negatives)
@@ -119,17 +117,32 @@ class FFN(nn.Module):
 class Featurizer:
     """normalized text -> [mean ; max] of word2vec vectors (zeros if no known word)."""
 
-    def __init__(self, itos, vectors):
+    def __init__(self, itos, vectors, mean=None, std=None):
         self.stoi = {w: i for i, w in enumerate(itos)}
         self.vectors = vectors
         self.dim = vectors.shape[1]
+        self.mean, self.std = mean, std   # feature standardization, fitted on the training set
+
+    def fit_scaler(self, X):
+        self.mean, self.std = X.mean(0), X.std(0) + 1e-6
+        return (X - self.mean) / self.std
 
     def __call__(self, text: str) -> np.ndarray:
         ids = [self.stoi[t] for t in tokenize(normalize(text)) if t in self.stoi]
         if not ids:
-            return np.zeros(2 * self.dim, dtype=np.float32)
-        m = self.vectors[ids]
-        return np.concatenate([m.mean(0), m.max(0)]).astype(np.float32)
+            x = np.zeros(2 * self.dim, dtype=np.float32)
+        else:
+            m = self.vectors[ids]
+            x = np.concatenate([m.mean(0), m.max(0)])
+        if self.mean is not None:
+            x = (x - self.mean) / self.std
+        return x.astype(np.float32)
+
+    def raw_batch(self, texts) -> np.ndarray:
+        mean, self.mean = self.mean, None
+        X = np.stack([self(t) for t in texts])
+        self.mean = mean
+        return X
 
     def batch(self, texts) -> np.ndarray:
         return np.stack([self(t) for t in texts])
