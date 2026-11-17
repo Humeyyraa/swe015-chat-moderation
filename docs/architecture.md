@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-    U["User types a chat message<br/>(Gradio web UI, app.py)"] --> N
+    U["Player (Kerem or Elif) types a chat message<br/>(Gradio web UI, app.py + src/ui.py)"] --> N
 
     subgraph PRE["Pre-processing - src/normalize.py (Area B)"]
         N["Regex normalization<br/>leetspeak · separated letters · repeated letters<br/>Turkish lowercase · @USER / URL removal"]
@@ -18,7 +18,7 @@ flowchart LR
 
     M1 & M2 & M3 & M4 & M5 --> P["Post-processing<br/>P(offensive) ≥ threshold (tuned on validation)<br/>→ label + confidence"]
     P --> K["Masking: lexicon words → s****<br/>else whole message hidden"]
-    K --> UI["Chat view with label + confidence<br/>side panel: latency log, model switch,<br/>all-model comparison"]
+    K --> UI["Game-lobby chat with label + confidence<br/>moderator panel: latency log, model switch,<br/>all-model comparison"]
 
     subgraph RUN["Runs on: CPU only (local machine or Colab CPU), weights downloaded from Hugging Face Hub"]
     end
@@ -38,4 +38,4 @@ flowchart LR
 | ONNX export + dynamic INT8 quantization | `scripts/quantize_bert.py` | D |
 | Benchmark: macro-F1, size, latency | `scripts/benchmark.py` | D |
 | Common inference interface | `src/predictors.py` | - |
-| User interface | `app.py` | - |
+| User interface | `app.py`, `src/ui.py` | - |

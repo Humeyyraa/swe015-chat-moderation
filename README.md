@@ -2,9 +2,11 @@
 
 A gaming platform must flag offensive Turkish chat messages within a strict
 time limit on a **CPU-only** server. This repository contains the full model
-ladder and a Gradio chat application that labels every message live
-(clean / offensive) with a confidence score, masks flagged messages, logs the
-response time of every message and lets the user switch between models.
+ladder and a Gradio game-lobby chat in which two players (Kerem and Elif) talk
+on one screen. Every message is labelled live (clean / offensive) with its
+confidence P(offensive), flagged messages are masked, and a moderator panel
+logs the response time of every message, compares all models on the last
+message and lets the user switch the moderation model.
 
 **Latency budget:** 50 ms per message on CPU.
 **Model in the application:** fine-tuned BERTurk, dynamic INT8 quantization, ONNX Runtime.

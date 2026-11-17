@@ -1,9 +1,11 @@
-"""Real-time chat moderation demo (Gradio).
+"""Real-time chat moderation demo (Gradio): a game-lobby chat with a moderator panel.
 
-Every message is labelled live (clean / offensive) with its confidence P(offensive),
-flagged messages are masked, and a side panel logs the response time of every
-message and lets the user switch between models. The default model is the
-quantized Transformer (BERTurk, dynamic INT8, ONNX Runtime, CPU).
+Two players (Kerem, blue team, and Elif, red team) chat on one screen. Every
+message is labelled live (clean / offensive) with its confidence P(offensive);
+flagged messages are masked. The moderator panel logs the response time of
+every message, compares all models on the last message and lets the user
+switch the moderation model. The default model is the quantized Transformer
+(BERTurk, dynamic INT8, ONNX Runtime, CPU).
 
 Run:  python app.py            (add --share for a public link, e.g. in Colab)
 """
@@ -12,37 +14,40 @@ import os
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")   # CPU only, like the target server
 
 import argparse
-import html
+import inspect
 import time
+from datetime import datetime
 
 import gradio as gr
-import pandas as pd
 
 from src.config import LATENCY_BUDGET_MS
 from src.hub import ensure_models
 from src.lexicon import Lexicon
 from src.predictors import load_all
+from src.ui import CSS, PLAYERS, chat_html, header, moderator_html
 
 DEFAULT_MODEL = "BERTurk INT8 (ONNX)"
-SHORT = {"Lexicon + edit distance": "Lexicon", "tf-idf + LogReg": "tf-idf",
-         "word2vec + FFN": "w2v+FFN", "BERTurk (PyTorch)": "BERT FP32",
-         "BERTurk INT8 (ONNX)": "BERT INT8"}
-LOG_COLS = ["#", "model", "label", "P(off)", "ms", f"≤{LATENCY_BUDGET_MS:.0f}ms"]
-CMP_COLS = ["model", "label", "P(off)", "threshold", "ms"]
-EXAMPLES = [
-    "iyi oyundu kanka, yarın tekrar atalım mı?",
-    "sen ne salak bir oyuncusun ya",
-    "s4l4k mısın nesin, takımı batırdın",
-    "a.p.t.a.l gibi oynama şunu",
-    "bu boss öldürücü derecede zor ama çok güzel",
-    "takımımız rezil oldu bugün",
-]
+TZ = os.environ.get("APP_TZ", "Europe/Istanbul")
+EXAMPLES = {
+    "Kerem": ["gg wp, iyi oyundu kanka", "s4l4k mısın nesin, takımı batırdın",
+              "a.p.t.a.l gibi oynama şunu", "bu boss öldürücü derecede zor ama çok güzel"],
+    "Elif": ["mid'e geliyorum, beni bekle", "sen ne salak bir oyuncusun ya",
+             "takımımız rezil oldu bugün", "tamam sakin ol, bir sonraki maçı alırız"],
+}
 
 ensure_models()
 MODELS = load_all(include_onnx_fp32=False, include_torch_fp32=True)
 if DEFAULT_MODEL not in MODELS:
     raise SystemExit(f"{DEFAULT_MODEL} not found - run the training scripts or set HF_REPO_ID.")
 LEX = Lexicon()
+
+
+def now():
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo(TZ)).strftime("%H:%M:%S")
+    except Exception:
+        return time.strftime("%H:%M:%S")
 
 
 def classify(name, text):
@@ -55,102 +60,86 @@ def classify(name, text):
 
 
 def masked(text):
+    """Star-masked text if the lexicon finds the offensive words, else '' (whole message hidden)."""
     stars = LEX.mask(text)
-    return stars if stars != text else "█████ (message hidden)"
+    return stars if stars != text else ""
 
 
-def bubble(msg):
-    color = "#c0392b" if msg["off"] else "#1e8449"
-    label = "OFFENSIVE" if msg["off"] else "CLEAN"
-    body = html.escape(msg["shown"])
-    if msg["off"]:
-        body += ("<details style='margin-top:4px;font-size:12px;opacity:.75'><summary>show original</summary>"
-                 f"{html.escape(msg['original'])}</details>")
-    return (
-        "<div style='margin:8px 0;padding:10px 12px;border-radius:12px;"
-        f"border-left:5px solid {color};background:rgba(127,127,127,.08)'>"
-        f"<div style='font-size:15px'>{body}</div>"
-        f"<div style='margin-top:6px;font-size:12px'>"
-        f"<span style='background:{color};color:white;padding:2px 8px;border-radius:8px;font-weight:600'>"
-        f"{label}</span>"
-        f"<span style='opacity:.8'> &nbsp;P(offensive) = {msg['p']:.2f} · threshold {msg['th']:.2f}"
-        f" · {msg['ms']:.1f} ms · {html.escape(msg['model'])}</span></div></div>"
-    )
-
-
-def render(chat):
-    if not chat:
-        return "<div style='opacity:.6;padding:20px'>No messages yet - type something below.</div>"
-    return ("<div style='max-height:520px;overflow-y:auto'>"
-            + "".join(bubble(m) for m in reversed(chat)) + "</div>")
-
-
-def stats(log, model):
-    ms = [r[4] for r in log if r[1] == SHORT.get(model, model)]
-    if not ms:
-        return f"**Latency budget:** {LATENCY_BUDGET_MS:.0f} ms / message (CPU)"
-    avg = sum(ms) / len(ms)
-    ok = "within budget ✅" if avg <= LATENCY_BUDGET_MS else "over budget ❌"
-    return (f"**Latency budget:** {LATENCY_BUDGET_MS:.0f} ms / message (CPU)  \n"
-            f"**{model}:** mean {avg:.1f} ms over {len(ms)} message(s) - {ok}")
-
-
-def send(text, model, compare, chat, log):
+def send(player, text, model, compare, chat, log):
     text = (text or "").strip()
     if not text:
-        return "", render(chat), chat, log, pd.DataFrame(log, columns=LOG_COLS), gr.update(), stats(log, model)
+        return "", chat_html(chat), chat, log, gr.update()
     off, p, ms = classify(model, text)
-    chat = chat + [{"original": text, "shown": masked(text) if off else text, "off": off,
-                    "p": p, "th": MODELS[model].threshold, "ms": ms, "model": model}]
-    log = log + [[len(log) + 1, SHORT.get(model, model), "OFF" if off else "NOT",
-                  round(p, 2), round(ms, 1), "✓" if ms <= LATENCY_BUDGET_MS else "✗"]]
+    t = now()
+    chat = chat + [{"player": player, "time": t, "original": text, "shown": masked(text) if off else "",
+                    "off": off, "p": p, "th": MODELS[model].threshold, "ms": ms, "model": model}]
+    log = log + [{"time": t, "player": player, "off": off, "p": p, "ms": ms, "model": model}]
     cmp_rows = []
     if compare:
-        for name, m in MODELS.items():
-            o, q, t = classify(name, text)
-            cmp_rows.append([SHORT.get(name, name), "OFF" if o else "NOT", round(q, 2),
-                             m.threshold, round(t, 1)])
-    return ("", render(chat), chat, log, pd.DataFrame(log[::-1], columns=LOG_COLS),
-            pd.DataFrame(cmp_rows, columns=CMP_COLS), stats(log, model))
+        for name in MODELS:
+            o, q, s = classify(name, text)
+            cmp_rows.append({"model": name, "off": o, "p": q, "ms": s})
+    return "", chat_html(chat), chat, log, moderator_html(log, cmp_rows, model, LATENCY_BUDGET_MS)
 
 
-def clear():
-    return render([]), [], [], pd.DataFrame(columns=LOG_COLS), pd.DataFrame(columns=CMP_COLS), stats([], DEFAULT_MODEL)
+def send_kerem(text, model, compare, chat, log):
+    return send("Kerem", text, model, compare, chat, log)
 
 
-with gr.Blocks(title="SWE015 - Real-time chat moderation") as demo:
-    gr.Markdown("## 🎮 Real-time chat moderation (Turkish)\n"
-                "Each message is classified live as **clean** or **offensive**. "
-                "Offensive messages are masked. Default model: **BERTurk, dynamic INT8, ONNX Runtime on CPU**.  \n"
-                "A message is OFFENSIVE when P(offensive) ≥ the model's threshold (tuned on the validation set).")
+def send_elif(text, model, compare, chat, log):
+    return send("Elif", text, model, compare, chat, log)
+
+
+def change_model(model, log):
+    return header(model, LATENCY_BUDGET_MS), moderator_html(log, [], model, LATENCY_BUDGET_MS)
+
+
+def clear(model):
+    return chat_html([]), [], [], moderator_html([], [], model, LATENCY_BUDGET_MS)
+
+
+# CSS / dark mode: newer Gradio versions take these in launch(), older ones in Blocks()
+DARK_JS = "() => { document.body.classList.add('dark'); }"
+blocks_kw, launch_kw = {}, {}
+for key, val in (("css", CSS), ("js", DARK_JS)):
+    if key in inspect.signature(gr.Blocks.__init__).parameters:
+        blocks_kw[key] = val
+    else:
+        launch_kw[key] = val
+
+with gr.Blocks(title="SWE015 - Real-time chat moderation", **blocks_kw) as demo:
     chat_state, log_state = gr.State([]), gr.State([])
-    with gr.Row():
+    head = gr.HTML(header(DEFAULT_MODEL, LATENCY_BUDGET_MS))
+    with gr.Row(equal_height=False):
         with gr.Column(scale=3):
-            chat_html = gr.HTML(render([]))
+            chat_view = gr.HTML(chat_html([]))
             with gr.Row():
-                box = gr.Textbox(placeholder="Type a chat message and press Enter…", show_label=False, scale=5)
-                send_btn = gr.Button("Send", variant="primary", scale=1)
-            gr.Examples(EXAMPLES, inputs=[box], label="Try these")
+                with gr.Column():
+                    k_box = gr.Textbox(label=f"Kerem · {PLAYERS['Kerem']['team']}", placeholder="Message as Kerem…")
+                    k_btn = gr.Button("Send as Kerem", variant="primary")
+                    gr.Examples(EXAMPLES["Kerem"], inputs=[k_box], label="Kerem's examples")
+                with gr.Column():
+                    e_box = gr.Textbox(label=f"Elif · {PLAYERS['Elif']['team']}", placeholder="Message as Elif…")
+                    e_btn = gr.Button("Send as Elif", variant="primary")
+                    gr.Examples(EXAMPLES["Elif"], inputs=[e_box], label="Elif's examples")
         with gr.Column(scale=2):
-            model_sel = gr.Radio(list(MODELS), value=DEFAULT_MODEL, label="Model")
-            compare = gr.Checkbox(value=True, label="Also run all models on each message (comparison table)")
-            stat_md = gr.Markdown(stats([], DEFAULT_MODEL))
-            log_df = gr.Dataframe(pd.DataFrame(columns=LOG_COLS), label="Response-time log (every message)",
-                                  interactive=False, wrap=True)
-            cmp_df = gr.Dataframe(pd.DataFrame(columns=CMP_COLS), label="All models on the last message",
-                                  interactive=False, wrap=True)
+            model_sel = gr.Radio(list(MODELS), value=DEFAULT_MODEL, label="Moderation model")
+            compare = gr.Checkbox(value=True, label="Also run all models on each message")
+            mod_view = gr.HTML(moderator_html([], [], DEFAULT_MODEL, LATENCY_BUDGET_MS))
             clear_btn = gr.Button("Clear chat")
 
-    io = dict(fn=send, inputs=[box, model_sel, compare, chat_state, log_state],
-              outputs=[box, chat_html, chat_state, log_state, log_df, cmp_df, stat_md])
-    box.submit(**io)
-    send_btn.click(**io)
-    model_sel.change(stats, [log_state, model_sel], stat_md)
-    clear_btn.click(clear, None, [chat_html, chat_state, log_state, log_df, cmp_df, stat_md])
+    shared_in = [model_sel, compare, chat_state, log_state]
+    outs = [None, chat_view, chat_state, log_state, mod_view]
+    for box, btn, fn in ((k_box, k_btn, send_kerem), (e_box, e_btn, send_elif)):
+        o = [box] + outs[1:]
+        box.submit(fn, [box] + shared_in, o)
+        btn.click(fn, [box] + shared_in, o)
+    model_sel.change(change_model, [model_sel, log_state], [head, mod_view])
+    clear_btn.click(clear, [model_sel], [chat_view, chat_state, log_state, mod_view])
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--share", action="store_true", help="create a public gradio.live link")
     ap.add_argument("--port", type=int, default=7860)
     a = ap.parse_args()
-    demo.launch(share=a.share, server_port=a.port)
+    demo.launch(share=a.share, server_port=a.port, **launch_kw)
