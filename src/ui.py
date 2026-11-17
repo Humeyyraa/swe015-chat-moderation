@@ -48,7 +48,7 @@ details.orig div { color:#C9D2E6; font-size:13px; margin-top:3px; }
 .logo .name { font-size:26px; font-weight:900; letter-spacing:4px; color:#F7E7C6; line-height:1; }
 .logo .name small { display:block; font-size:11px; letter-spacing:6px; color:#F7B046; font-weight:700; margin-top:4px; }
 .minfo { flex:1; display:flex; flex-direction:column; gap:3px; }
-.minfo .l1 { font-size:13px; letter-spacing:1.5px; color:#AEB9D3; text-transform:uppercase; font-weight:700; }
+.minfo .l1 { font-size:13px; letter-spacing:1.5px; color:#AEB9D3;  font-weight:700; }
 .minfo .l2 { font-size:13px; color:#7F8BA6; }
 .score { display:flex; align-items:center; gap:12px; font-weight:900; font-size:26px; }
 .score .b { color:#5B9CF6; } .score .r { color:#F0716A; } .score .sep { color:#56627E; font-size:20px; }
@@ -66,14 +66,14 @@ details.orig div { color:#C9D2E6; font-size:13px; margin-top:3px; }
 .sys { font-size:13px; color:#F7B046; padding:6px 10px; border-radius:8px; background:#1E1A12; border:1px solid #4A3A1A; }
 .mod { display:flex; flex-direction:column; gap:12px; }
 .modcard { padding:14px; border-radius:14px; background:#121A2B; border:1px solid #26314A; }
-.modcard h4 { margin:0 0 10px 0; font-size:13px; letter-spacing:.8px; text-transform:uppercase; color:#9AA7C2; }
+.modcard h4 { margin:0 0 10px 0; font-size:13px; letter-spacing:.8px;  color:#9AA7C2; }
 .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
 .kpi { background:#18223A; border-radius:10px; padding:10px; }
 .kpi .v { font-size:22px; font-weight:800; color:#EEF2FA; }
-.kpi .l { font-size:11px; color:#8C99B5; text-transform:uppercase; letter-spacing:.5px; }
+.kpi .l { font-size:11px; color:#8C99B5;  letter-spacing:.5px; }
 .lrow { display:grid; grid-template-columns: 62px 56px 92px 52px 1fr; gap:8px; align-items:center;
   padding:6px 0; border-bottom:1px solid #1F2940; font-size:13px; color:#C9D2E6; }
-.lrow.hd { color:#7F8BA6; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+.lrow.hd { color:#7F8BA6; font-size:11px;  letter-spacing:.5px; }
 .lat { display:flex; align-items:center; gap:6px; }
 .lat .track { flex:1; height:8px; border-radius:4px; background:#232E47; position:relative; overflow:hidden; }
 .lat .fill { height:8px; border-radius:4px; }
@@ -113,7 +113,7 @@ def header(model_name, budget_ms):
         "<div class='logo'><div class='emb'></div>"
         f"<div class='name'>{GAME['name']}<small>ARENA</small></div></div>"
         "<div class='minfo'>"
-        f"<div class='l1'>{esc(GAME['mode'])} · {esc(GAME['map'])} · Server {esc(GAME['server'])}</div>"
+        f"<div class='l1'>{esc(GAME['mode'].upper())} · {esc(GAME['map'].upper())} · SERVER {esc(GAME['server'])}</div>"
         "<div class='l2'>Match in progress · all-chat is moderated before messages are shown</div></div>"
         f"<div class='score'><span class='lbl'>BLUE</span><span class='b'>{b}</span><span class='sep'>:</span>"
         f"<span class='r'>{r}</span><span class='lbl'>RED</span></div>"
@@ -175,10 +175,10 @@ def moderator_html(log, cmp_rows, model_name, budget):
     within = sum(1 for r in log if r["ms"] <= budget)
     kpis = (
         "<div class='kpis'>"
-        f"<div class='kpi'><div class='v'>{n}</div><div class='l'>messages</div></div>"
-        f"<div class='kpi'><div class='v'>{flagged}</div><div class='l'>flagged</div></div>"
-        f"<div class='kpi'><div class='v'>{'–' if mean is None else f'{mean:.1f}'}</div><div class='l'>mean ms, active</div></div>"
-        f"<div class='kpi'><div class='v'>{'–' if not n else f'{within}/{n}'}</div><div class='l'>≤ {budget:.0f} ms</div></div>"
+        f"<div class='kpi'><div class='v'>{n}</div><div class='l'>MESSAGES</div></div>"
+        f"<div class='kpi'><div class='v'>{flagged}</div><div class='l'>FLAGGED</div></div>"
+        f"<div class='kpi'><div class='v'>{'–' if mean is None else f'{mean:.1f}'}</div><div class='l'>MEAN MS, ACTIVE</div></div>"
+        f"<div class='kpi'><div class='v'>{'–' if not n else f'{within}/{n}'}</div><div class='l'>≤ {budget:.0f} MS</div></div>"
         "</div>"
     )
     rows = "".join(
@@ -187,9 +187,9 @@ def moderator_html(log, cmp_rows, model_name, budget):
         for r in reversed(log)
     ) or "<div class='muted'>No messages yet.</div>"
     log_block = (
-        "<div class='modcard'><h4>Moderation log · every message</h4>"
-        "<div class='lrow hd'><span>time</span><span>player</span><span>verdict</span><span>P(off)</span>"
-        f"<span>latency (bar = {budget:.0f} ms budget)</span></div>"
+        "<div class='modcard'><h4>MODERATION LOG · EVERY MESSAGE</h4>"
+        "<div class='lrow hd'><span>TIME</span><span>PLAYER</span><span>VERDICT</span><span>P(OFF)</span>"
+        f"<span>LATENCY (BAR = {budget:.0f} MS BUDGET)</span></div>"
         f"<div class='scroll'>{rows}</div></div>"
     )
     if cmp_rows:
@@ -199,10 +199,10 @@ def moderator_html(log, cmp_rows, model_name, budget):
             f"<span>{c['p']:.2f}</span>{_lat_bar(c['ms'], budget)}</div>"
             for c in cmp_rows
         )
-        cmp_block = ("<div class='modcard'><h4>All models on the last message</h4>"
-                     "<div class='crow' style='color:#7F8BA6;font-size:11px;text-transform:uppercase'>"
-                     "<span>model</span><span>verdict</span><span>P(off)</span><span>latency</span></div>"
+        cmp_block = ("<div class='modcard'><h4>ALL MODELS ON THE LAST MESSAGE</h4>"
+                     "<div class='crow' style='color:#7F8BA6;font-size:11px;'>"
+                     "<span>MODEL</span><span>VERDICT</span><span>P(OFF)</span><span>LATENCY</span></div>"
                      f"{crow}</div>")
     else:
         cmp_block = ""
-    return f"<div class='mod'><div class='modcard'><h4>Session</h4>{kpis}</div>{log_block}{cmp_block}</div>"
+    return f"<div class='mod'><div class='modcard'><h4>SESSION</h4>{kpis}</div>{log_block}{cmp_block}</div>"
