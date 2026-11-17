@@ -15,7 +15,7 @@ SHORT = {"Lexicon + edit distance": "Lexicon", "tf-idf + LogReg": "tf-idf + LogR
 
 CSS = """
 .gradio-container { background: #0E1320 !important; max-width: 1400px !important; }
-.lobby-head { display:flex; align-items:center; gap:16px; padding:14px 18px; border-radius:14px;
+.lobby-head { display:none; align-items:center; gap:16px; padding:14px 18px; border-radius:14px;
   background: linear-gradient(90deg, #1A2238, #141B2D); border:1px solid #2A3550; }
 .lobby-head .title { font-size:22px; font-weight:700; color:#EEF2FA; }
 .lobby-head .sub { font-size:14px; color:#9AA7C2; }
@@ -39,6 +39,31 @@ CSS = """
 details.orig summary { cursor:pointer; color:#B7C2DA; font-size:12px; }
 details.orig div { color:#C9D2E6; font-size:13px; margin-top:3px; }
 .empty { color:#6F7C99; text-align:center; margin:auto; font-size:15px; }
+.game { border-radius:16px; overflow:hidden; border:1px solid #2A3550; background:#0B1020; }
+.gbar { display:flex; align-items:center; gap:22px; padding:14px 20px;
+  background: linear-gradient(90deg, #2A1408 0%, #1A1F35 45%, #101629 100%); border-bottom:1px solid #2A3550; }
+.logo { display:flex; align-items:center; gap:20px; padding-left:6px; }
+.logo .emb { width:36px; height:36px; transform:rotate(45deg); border-radius:8px;
+  background: linear-gradient(135deg, #F7B046, #C2410C); box-shadow:0 0 18px rgba(247,176,70,.45); }
+.logo .name { font-size:26px; font-weight:900; letter-spacing:4px; color:#F7E7C6; line-height:1; }
+.logo .name small { display:block; font-size:11px; letter-spacing:6px; color:#F7B046; font-weight:700; margin-top:4px; }
+.minfo { flex:1; display:flex; flex-direction:column; gap:3px; }
+.minfo .l1 { font-size:13px; letter-spacing:1.5px; color:#AEB9D3; text-transform:uppercase; font-weight:700; }
+.minfo .l2 { font-size:13px; color:#7F8BA6; }
+.score { display:flex; align-items:center; gap:12px; font-weight:900; font-size:26px; }
+.score .b { color:#5B9CF6; } .score .r { color:#F0716A; } .score .sep { color:#56627E; font-size:20px; }
+.score .lbl { font-size:11px; letter-spacing:2px; color:#7F8BA6; font-weight:700; }
+.modstat { text-align:right; display:flex; flex-direction:column; gap:4px; align-items:flex-end; }
+.modstat .m { font-size:12px; color:#AEB9D3; }
+.roster { display:flex; justify-content:space-between; gap:16px; padding:10px 20px; background:#0F1528; }
+.team { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.team .tl { font-size:11px; letter-spacing:2px; font-weight:800; margin-right:4px; }
+.pl { font-size:12px; padding:4px 9px; border-radius:8px; background:#18223A; color:#AEB9D3; border:1px solid #233050; }
+.pl.me { color:#FFFFFF; font-weight:700; }
+.tabs { display:flex; gap:6px; margin-bottom:8px; }
+.tab { font-size:12px; font-weight:800; letter-spacing:1px; padding:5px 12px; border-radius:8px; color:#7F8BA6; background:#121A2B; border:1px solid #26314A; }
+.tab.on { color:#0E1320; background:#F7B046; border-color:#F7B046; }
+.sys { font-size:13px; color:#F7B046; padding:6px 10px; border-radius:8px; background:#1E1A12; border:1px solid #4A3A1A; }
 .mod { display:flex; flex-direction:column; gap:12px; }
 .modcard { padding:14px; border-radius:14px; background:#121A2B; border:1px solid #26314A; }
 .modcard h4 { margin:0 0 10px 0; font-size:13px; letter-spacing:.8px; text-transform:uppercase; color:#9AA7C2; }
@@ -65,17 +90,40 @@ def esc(s):
     return html.escape(str(s))
 
 
+GAME = {"name": "VALKORA", "mode": "Ranked · 5v5", "map": "Frostpeak Ruins", "server": "EU-TR",
+        "score": (12, 9),
+        "blue": ["Kerem", "Zeynep", "Mert", "Ayşe", "Can"],
+        "red": ["Elif", "Burak", "Selin", "Emre", "Deniz"]}
+
+
 def header(model_name, budget_ms):
+    """Top bar of the (fictional) game VALKORA Arena: logo, match info, score, rosters, moderation status."""
+    def team(names, color, label):
+        pills = []
+        for n in names:
+            if n in PLAYERS:   # the two players who chat in this demo
+                pills.append(f"<span class='pl me' style='border-color:{color}'>💬 {esc(n)}</span>")
+            else:
+                pills.append(f"<span class='pl'>{esc(n)}</span>")
+        return f"<div class='team'><span class='tl' style='color:{color}'>{label}</span>{''.join(pills)}</div>"
+    b, r = GAME["score"]
     return (
-        "<div class='lobby-head'>"
-        "<div style='font-size:30px'>🎮</div>"
-        "<div style='flex:1'>"
-        "<div class='title'>Ranked Match · Lobby Chat</div>"
-        f"<div class='sub'>Every message is checked by the moderation model before it is shown · "
-        f"active model: <b style='color:#EEF2FA'>{esc(model_name)}</b> · budget {budget_ms:.0f} ms / message (CPU)</div>"
+        "<div class='game'>"
+        "<div class='gbar'>"
+        "<div class='logo'><div class='emb'></div>"
+        f"<div class='name'>{GAME['name']}<small>ARENA</small></div></div>"
+        "<div class='minfo'>"
+        f"<div class='l1'>{esc(GAME['mode'])} · {esc(GAME['map'])} · Server {esc(GAME['server'])}</div>"
+        "<div class='l2'>Match in progress · all-chat is moderated before messages are shown</div></div>"
+        f"<div class='score'><span class='lbl'>BLUE</span><span class='b'>{b}</span><span class='sep'>:</span>"
+        f"<span class='r'>{r}</span><span class='lbl'>RED</span></div>"
+        "<div class='modstat'><span class='pill on'>● MODERATION ON</span>"
+        f"<span class='m'>{esc(model_name)} · ≤ {budget_ms:.0f} ms / message · CPU</span></div>"
         "</div>"
-        "<span class='pill on'>● MODERATION ON</span>"
-        "</div>"
+        "<div class='roster'>"
+        f"{team(GAME['blue'], PLAYERS['Kerem']['color'], 'BLUE')}"
+        f"{team(GAME['red'], PLAYERS['Elif']['color'], 'RED')}"
+        "</div></div>"
     )
 
 
@@ -85,7 +133,7 @@ def _verdict_tag(off):
 
 def bubble(m):
     p = PLAYERS.get(m["player"], {"team": "", "color": "#AAB4C8"})
-    head = (f"<div class='mhead'><b style='color:{p['color']}'>{esc(m['player'])}</b> "
+    head = (f"<div class='mhead'>[ALL] <b style='color:{p['color']}'>{esc(m['player'])}</b> "
             f"· {esc(p['team'])} · {esc(m['time'])}</div>")
     if m["off"]:
         shown = m["shown"]
@@ -104,12 +152,12 @@ def bubble(m):
 
 
 def chat_html(chat):
-    if not chat:
-        inner = "<div class='empty'>The match has started. Say hi to your teammates!</div>"
-    else:
-        # column-reverse keeps the newest message at the bottom and in view
-        inner = "".join(bubble(m) for m in reversed(chat))
-    return f"<div class='chatbox'>{inner}</div>"
+    system = (f"<div class='sys'>[System] Match started on {esc(GAME['map'])}. "
+              "Chat moderation is active: offensive messages are hidden.</div>")
+    # column-reverse keeps the newest message at the bottom and in view
+    inner = "".join(bubble(m) for m in reversed(chat)) + system
+    tabs = "<div class='tabs'><span class='tab on'>ALL CHAT</span><span class='tab'>TEAM</span></div>"
+    return f"{tabs}<div class='chatbox'>{inner}</div>"
 
 
 def _lat_bar(ms, budget):
