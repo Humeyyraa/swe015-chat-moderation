@@ -6,8 +6,8 @@ can be tested without Gradio or any model.
 import html
 
 PLAYERS = {
-    "Kerem": {"team": "Blue team", "color": "#5B9CF6"},
-    "Elif": {"team": "Red team", "color": "#F0716A"},
+    "Kerem": {"team": "Team Aurora", "color": "#2DD4BF"},
+    "Elif": {"team": "Team Nova", "color": "#B392F0"},
 }
 SHORT = {"Lexicon + edit distance": "Lexicon", "tf-idf + LogReg": "tf-idf + LogReg",
          "word2vec + FFN": "word2vec + FFN", "BERTurk (PyTorch)": "BERTurk FP32",
@@ -51,7 +51,7 @@ details.orig div { color:#C9D2E6; font-size:13px; margin-top:3px; }
 .minfo .l1 { font-size:13px; letter-spacing:1.5px; color:#AEB9D3;  font-weight:700; }
 .minfo .l2 { font-size:13px; color:#7F8BA6; }
 .score { display:flex; align-items:center; gap:12px; font-weight:900; font-size:26px; }
-.score .b { color:#5B9CF6; } .score .r { color:#F0716A; } .score .sep { color:#56627E; font-size:20px; }
+.score .b { color:#2DD4BF; } .score .r { color:#B392F0; } .score .sep { color:#56627E; font-size:20px; }
 .score .lbl { font-size:11px; letter-spacing:2px; color:#7F8BA6; font-weight:700; }
 .modstat { text-align:right; display:flex; flex-direction:column; gap:4px; align-items:flex-end; }
 .modstat .m { font-size:12px; color:#AEB9D3; }
@@ -115,14 +115,14 @@ def header(model_name, budget_ms):
         "<div class='minfo'>"
         f"<div class='l1'>{esc(GAME['mode'].upper())} · {esc(GAME['map'].upper())} · SERVER {esc(GAME['server'])}</div>"
         "<div class='l2'>Match in progress · all-chat is moderated before messages are shown</div></div>"
-        f"<div class='score'><span class='lbl'>BLUE</span><span class='b'>{b}</span><span class='sep'>:</span>"
-        f"<span class='r'>{r}</span><span class='lbl'>RED</span></div>"
+        f"<div class='score'><span class='lbl'>AURORA</span><span class='b'>{b}</span><span class='sep'>:</span>"
+        f"<span class='r'>{r}</span><span class='lbl'>NOVA</span></div>"
         "<div class='modstat'><span class='pill on'>● MODERATION ON</span>"
         f"<span class='m'>{esc(model_name)} · ≤ {budget_ms:.0f} ms / message · CPU</span></div>"
         "</div>"
         "<div class='roster'>"
-        f"{team(GAME['blue'], PLAYERS['Kerem']['color'], 'BLUE')}"
-        f"{team(GAME['red'], PLAYERS['Elif']['color'], 'RED')}"
+        f"{team(GAME['blue'], PLAYERS['Kerem']['color'], 'AURORA')}"
+        f"{team(GAME['red'], PLAYERS['Elif']['color'], 'NOVA')}"
         "</div></div>"
     )
 

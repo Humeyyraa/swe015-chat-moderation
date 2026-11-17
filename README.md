@@ -2,7 +2,7 @@
 
 A gaming platform must flag offensive Turkish chat messages within a strict
 time limit on a **CPU-only** server. This repository contains the full model
-ladder and a Gradio game-lobby chat in which two players (Kerem and Elif) talk
+ladder and a Gradio game-lobby chat in which two players (Kerem, Team Aurora, and Elif, Team Nova) talk
 on one screen. Every message is labelled live (clean / offensive) with its
 confidence P(offensive), flagged messages are masked, and a moderator panel
 logs the response time of every message, compares all models on the last

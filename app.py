@@ -1,6 +1,6 @@
 """Real-time chat moderation demo (Gradio): a game-lobby chat with a moderator panel.
 
-Two players (Kerem, blue team, and Elif, red team) chat on one screen. Every
+Two players (Kerem, Team Aurora, and Elif, Team Nova) chat on one screen. Every
 message is labelled live (clean / offensive) with its confidence P(offensive);
 flagged messages are masked. The moderator panel logs the response time of
 every message, compares all models on the last message and lets the user
