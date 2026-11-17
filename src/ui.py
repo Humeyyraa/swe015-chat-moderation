@@ -71,15 +71,16 @@ details.orig div { color:#C9D2E6; font-size:13px; margin-top:3px; }
 .kpi { background:#18223A; border-radius:10px; padding:10px; }
 .kpi .v { font-size:22px; font-weight:800; color:#EEF2FA; }
 .kpi .l { font-size:11px; color:#8C99B5;  letter-spacing:.5px; }
-.lrow { display:grid; grid-template-columns: 62px 56px 92px 52px 1fr; gap:8px; align-items:center;
+.lrow { display:grid; grid-template-columns: 64px 50px 88px 40px minmax(0,1fr); gap:8px; align-items:center;
   padding:6px 0; border-bottom:1px solid #1F2940; font-size:13px; color:#C9D2E6; }
 .lrow.hd { color:#7F8BA6; font-size:11px;  letter-spacing:.5px; }
 .lat { display:flex; align-items:center; gap:6px; }
-.lat .track { flex:1; height:8px; border-radius:4px; background:#232E47; position:relative; overflow:hidden; }
+.lat .track { flex:1; min-width:30px; height:8px; border-radius:4px; background:#232E47; position:relative; overflow:hidden; }
 .lat .fill { height:8px; border-radius:4px; }
-.lat .ms { width:62px; text-align:right; font-variant-numeric: tabular-nums; }
-.scroll { max-height:230px; overflow-y:auto; }
-.crow { display:grid; grid-template-columns: 120px 92px 52px 1fr; gap:8px; align-items:center;
+.lat .ms { width:58px; white-space:nowrap; text-align:right; font-variant-numeric: tabular-nums; }
+.scroll { max-height:230px; overflow-y:auto; overflow-x:hidden; }
+.lrow > *, .crow > * { min-width:0; }
+.crow { display:grid; grid-template-columns: 112px 88px 40px minmax(0,1fr); gap:8px; align-items:center;
   padding:6px 0; border-bottom:1px solid #1F2940; font-size:13px; color:#C9D2E6; }
 .crow.active { color:#FFFFFF; font-weight:700; }
 .muted { color:#6F7C99; font-size:12px; }
@@ -189,7 +190,7 @@ def moderator_html(log, cmp_rows, model_name, budget):
     log_block = (
         "<div class='modcard'><h4>MODERATION LOG · EVERY MESSAGE</h4>"
         "<div class='lrow hd'><span>TIME</span><span>PLAYER</span><span>VERDICT</span><span>P(OFF)</span>"
-        f"<span>LATENCY (BAR = {budget:.0f} MS BUDGET)</span></div>"
+        f"<span>LATENCY · BAR = {budget:.0f} MS</span></div>"
         f"<div class='scroll'>{rows}</div></div>"
     )
     if cmp_rows:
