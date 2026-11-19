@@ -2,7 +2,7 @@
 
 A gaming platform must flag offensive Turkish chat messages within a strict
 time limit on a **CPU-only** server. This repository contains the full model
-ladder and a Gradio game-lobby chat in which two players (Kerem, Team Aurora, and Elif, Team Nova) talk
+ladder and a Gradio game-lobby chat in which two players (Kerem the knight and Elif the mage, in the fictional retro game PIXEL KEEP) talk
 on one screen. Every message is labelled live (clean / offensive) with its
 confidence P(offensive), flagged messages are masked, and a moderator panel
 logs the response time of every message, compares all models on the last

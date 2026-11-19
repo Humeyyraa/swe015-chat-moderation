@@ -18,7 +18,7 @@ flowchart LR
 
     M1 & M2 & M3 & M4 & M5 --> P["Post-processing<br/>P(offensive) ≥ threshold (tuned on validation)<br/>→ label + confidence"]
     P --> K["Masking: lexicon words → s****<br/>else whole message hidden"]
-    K --> UI["Game-lobby chat with label + confidence<br/>moderator panel: latency log, model switch,<br/>all-model comparison"]
+    K --> UI["Retro game chat (PIXEL KEEP) with label + confidence<br/>moderator console: latency log, model switch,<br/>all-model comparison"]
 
     subgraph RUN["Runs on: CPU only (local machine or Colab CPU), weights downloaded from Hugging Face Hub"]
     end

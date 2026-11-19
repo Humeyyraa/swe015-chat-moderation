@@ -1,8 +1,9 @@
-"""Real-time chat moderation demo (Gradio): a game-lobby chat with a moderator panel.
+"""Real-time chat moderation demo (Gradio): a retro game chat with a moderator console.
 
-Two players (Kerem, Team Aurora, and Elif, Team Nova) chat on one screen. Every
+The demo is framed as PIXEL KEEP, a fictional 8-bit co-op game. Two party
+members (Kerem the knight and Elif the mage) chat on one screen. Every
 message is labelled live (clean / offensive) with its confidence P(offensive);
-flagged messages are masked. The moderator panel logs the response time of
+flagged messages are masked. The moderator console logs the response time of
 every message, compares all models on the last message and lets the user
 switch the moderation model. The default model is the quantized Transformer
 (BERTurk, dynamic INT8, ONNX Runtime, CPU).
@@ -29,10 +30,10 @@ from src.ui import CSS, PLAYERS, chat_html, header, moderator_html
 DEFAULT_MODEL = "BERTurk INT8 (ONNX)"
 TZ = os.environ.get("APP_TZ", "Europe/Istanbul")
 EXAMPLES = {
-    "Kerem": ["gg wp, iyi oyundu kanka", "s4l4k mısın nesin, takımı batırdın",
-              "a.p.t.a.l gibi oynama şunu", "bu boss öldürücü derecede zor ama çok güzel"],
-    "Elif": ["mid'e geliyorum, beni bekle", "sen ne salak bir oyuncusun ya",
-             "takımımız rezil oldu bugün", "tamam sakin ol, bir sonraki maçı alırız"],
+    "Kerem": ["gg, boss'u indirdik", "s4l4k mısın, tuzağa bastın", "a.p.t.a.l gibi koşma",
+              "bu boss öldürücü derecede zor"],
+    "Elif": ["iksir bende, beni bekle", "sen ne salak bir oyuncusun ya",
+             "sağdaki kapıyı aç, ben arkadayım", "tamam sakin ol, tekrar deneriz"],
 }
 
 ensure_models()
@@ -107,7 +108,7 @@ for key, val in (("css", CSS), ("js", DARK_JS)):
     else:
         launch_kw[key] = val
 
-with gr.Blocks(title="SWE015 - Real-time chat moderation", **blocks_kw) as demo:
+with gr.Blocks(title="PIXEL KEEP · SWE015 chat moderation", **blocks_kw) as demo:
     chat_state, log_state = gr.State([]), gr.State([])
     head = gr.HTML(header(DEFAULT_MODEL, LATENCY_BUDGET_MS))
     with gr.Row(equal_height=False):
@@ -115,18 +116,18 @@ with gr.Blocks(title="SWE015 - Real-time chat moderation", **blocks_kw) as demo:
             chat_view = gr.HTML(chat_html([]))
             with gr.Row():
                 with gr.Column():
-                    k_box = gr.Textbox(label=f"Kerem · {PLAYERS['Kerem']['team']}", placeholder="Message as Kerem…")
-                    k_btn = gr.Button("Send as Kerem", variant="primary")
+                    k_box = gr.Textbox(label="KEREM · KNIGHT", placeholder="Say something as Kerem…")
+                    k_btn = gr.Button("SEND AS KEREM ▶", elem_classes=["retro-btn"])
                     gr.Examples(EXAMPLES["Kerem"], inputs=[k_box], label="Kerem's examples")
                 with gr.Column():
-                    e_box = gr.Textbox(label=f"Elif · {PLAYERS['Elif']['team']}", placeholder="Message as Elif…")
-                    e_btn = gr.Button("Send as Elif", variant="primary")
+                    e_box = gr.Textbox(label="ELIF · MAGE", placeholder="Say something as Elif…")
+                    e_btn = gr.Button("SEND AS ELIF ▶", elem_classes=["retro-btn"])
                     gr.Examples(EXAMPLES["Elif"], inputs=[e_box], label="Elif's examples")
         with gr.Column(scale=2):
-            model_sel = gr.Radio(list(MODELS), value=DEFAULT_MODEL, label="Moderation model")
-            compare = gr.Checkbox(value=True, label="Also run all models on each message")
+            model_sel = gr.Radio(list(MODELS), value=DEFAULT_MODEL, label="MODERATION MODEL")
+            compare = gr.Checkbox(value=True, label="RUN ALL MODELS ON EACH MESSAGE")
             mod_view = gr.HTML(moderator_html([], [], DEFAULT_MODEL, LATENCY_BUDGET_MS))
-            clear_btn = gr.Button("Clear chat")
+            clear_btn = gr.Button("CLEAR CHAT", elem_classes=["retro-btn"])
 
     shared_in = [model_sel, compare, chat_state, log_state]
     outs = [None, chat_view, chat_state, log_state, mod_view]
