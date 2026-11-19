@@ -42,14 +42,14 @@ CSS = """
 
 .px { font-family:'Pixelify Sans', 'IBM Plex Mono', monospace; }
 .vt { font-family:'IBM Plex Mono', 'Courier New', monospace; }
-.stage { position:relative; overflow:hidden; border:4px solid #F8F8F8; box-shadow:6px 6px 0 #000; height:250px; background:#0F0B1E; }
+.stage { position:relative; overflow:hidden; border:4px solid #F8F8F8; box-shadow:6px 6px 0 #000; height:380px; background:#0F0B1E; }
 .stage svg.scene { position:absolute; left:0; top:0; width:100%; height:100%; }
 .stage .crt { position:absolute; inset:0; pointer-events:none;
   background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.22) 3px); }
 .stage .over { position:absolute; inset:0; display:flex; justify-content:space-between; align-items:flex-start; padding:18px 22px; }
-.title { font-family:'Press Start 2P', 'Pixelify Sans', monospace; font-size:34px; color:#FFD23F;
+.title { font-family:'Press Start 2P', 'Pixelify Sans', monospace; font-size:44px; color:#FFD23F;
   text-shadow:4px 4px 0 #B4410F, 8px 8px 0 #000; line-height:1.1; }
-.subtitle { font-size:16px; color:#F8F8F8; margin-top:14px; letter-spacing:1px; text-shadow:2px 2px 0 #000; }
+.subtitle { font-size:18px; color:#F8F8F8; margin-top:14px; letter-spacing:1px; text-shadow:2px 2px 0 #000; }
 .hud { display:flex; flex-direction:column; align-items:flex-end; gap:8px; font-size:16px; color:#F8F8F8; text-shadow:2px 2px 0 #000; }
 .hearts { color:#FF4F5E; font-size:20px; letter-spacing:4px; }
 .modon { background:#3BD16F; color:#0F0B1E; text-shadow:none; padding:4px 10px; border:3px solid #F8F8F8; font-weight:700;
@@ -62,17 +62,17 @@ CSS = """
 @keyframes bob { 50% { transform:translateY(-6px); } }
 @keyframes flick { 50% { opacity:.35; } }
 @keyframes squish { 50% { transform:scale(1.1, .85); } }
-.hudbar { display:grid; grid-template-columns:1fr 1fr 1.4fr .8fr auto; gap:12px; margin-top:12px; }
-.hcell { background:#1D1640; border:3px solid #F8F8F8; box-shadow:4px 4px 0 #000; padding:8px 12px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+.hudbar { display:grid; grid-template-columns:1.35fr 1.35fr 1.2fr .7fr auto; gap:12px; margin-top:12px; }
+.hcell { background:#1D1640; border:3px solid #F8F8F8; box-shadow:4px 4px 0 #000; padding:14px 16px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
 .hrow { display:flex; align-items:center; gap:12px; }
-.hname { font-size:17px; font-weight:700; }
-.hrole { font-size:12px; color:#B8B0D8; font-family:'IBM Plex Mono', monospace; }
-.stat { display:grid; grid-template-columns:28px minmax(0,1fr) 64px; gap:8px; align-items:center; font-size:12px; color:#E0DAF5; font-family:'IBM Plex Mono', monospace; }
-.gauge { height:10px; background:#0F0B1E; border:2px solid #F8F8F8; }
+.hname { font-size:22px; font-weight:700; margin-bottom:4px; }
+.hrole { font-size:14px; color:#B8B0D8; font-family:'IBM Plex Mono', monospace; }
+.stat { display:grid; grid-template-columns:30px minmax(0,1fr) 76px; gap:10px; align-items:center; font-size:14px; margin-top:2px; color:#E0DAF5; font-family:'IBM Plex Mono', monospace; }
+.gauge { height:14px; background:#0F0B1E; border:2px solid #F8F8F8; }
 .gauge i { display:block; height:100%; }
-.hlabel { font-size:13px; color:#FFD23F; font-weight:700; letter-spacing:1px; }
-.hbig { font-size:17px; color:#F8F8F8; }
-.hsmall { font-size:12px; color:#B8B0D8; font-family:'IBM Plex Mono', monospace; }
+.hlabel { font-size:15px; color:#FFD23F; font-weight:700; letter-spacing:1px; }
+.hbig { font-size:22px; color:#F8F8F8; }
+.hsmall { font-size:14px; color:#B8B0D8; font-family:'IBM Plex Mono', monospace; }
 .tabs { display:flex; gap:8px; margin:14px 0 8px; }
 .tab { font-size:15px; padding:6px 12px; border:3px solid #F8F8F8; color:#B8B0D8; background:#1D1640; }
 .tab.on { background:#FFD23F; color:#1D1640; font-weight:700; }
@@ -141,47 +141,51 @@ def _sprite_g(player, x, y, scale, cls):
 def _scene():
     """Pixel-art game scene: night sky, mountains, castle with torches, the two
     party members walking towards a slime, coins on the ground (pure SVG)."""
-    W, H, G = 1600, 250, 214   # width, height, ground line
-    stars = "".join(f"<rect x='{x}' y='{y}' width='4' height='4' fill='#F8F8F8'/>"
-                    for x, y in [(40, 20), (130, 60), (220, 30), (330, 14), (420, 70), (520, 26), (610, 52),
-                                 (700, 18), (790, 64), (880, 30), (960, 12), (1050, 58), (1130, 24), (1180, 80),
-                                 (1260, 40), (1340, 16), (1420, 66), (1500, 28), (1570, 54)])
-    moon = ("<rect x='1180' y='54' width='40' height='40' fill='#FFE9A8'/>"
-            "<rect x='1172' y='62' width='8' height='24' fill='#FFE9A8'/>"
-            "<rect x='1220' y='62' width='8' height='24' fill='#FFE9A8'/>"
-            "<rect x='1200' y='62' width='12' height='12' fill='#F2D27A'/>")
-    mountains = (f"<polygon points='0,{G} 140,100 300,{G}' fill='#2A2155'/>"
-                 f"<polygon points='200,{G} 380,80 560,{G}' fill='#33296A'/>"
-                 f"<polygon points='1040,{G} 1200,96 1360,{G}' fill='#2A2155'/>"
-                 f"<polygon points='1280,{G} 1450,110 1600,{G}' fill='#33296A'/>")
-    cx = 760   # castle
-    castle = (f"<rect x='{cx}' y='120' width='140' height='{G - 120}' fill='#1D1640'/>"
-              f"<rect x='{cx - 24}' y='96' width='40' height='{G - 96}' fill='#241B4D'/>"
-              f"<rect x='{cx + 124}' y='96' width='40' height='{G - 96}' fill='#241B4D'/>"
-              + "".join(f"<rect x='{x}' y='86' width='10' height='10' fill='#241B4D'/>"
-                        for x in (cx - 24, cx - 7, cx + 6, cx + 124, cx + 141, cx + 154))
-              + "".join(f"<rect x='{x}' y='110' width='14' height='10' fill='#1D1640'/>"
-                        for x in (cx + 18, cx + 46, cx + 74, cx + 102))
-              + f"<rect x='{cx + 54}' y='{G - 46}' width='32' height='46' fill='#0F0B1E'/>"
-              f"<g class='flick'><rect x='{cx - 12}' y='130' width='12' height='16' fill='#FFD23F'/>"
-              f"<rect x='{cx + 136}' y='130' width='12' height='16' fill='#FFD23F'/>"
-              f"<rect x='{cx + 40}' y='{G - 60}' width='8' height='12' fill='#FF9F1C'/>"
-              f"<rect x='{cx + 92}' y='{G - 60}' width='8' height='12' fill='#FF9F1C'/></g>")
-    coins = "".join(f"<rect x='{x}' y='{G - 14}' width='10' height='10' fill='#FFD23F'/>"
-                    f"<rect x='{x + 3}' y='{G - 11}' width='4' height='4' fill='#B4410F'/>"
-                    for x in (560, 600, 640, 1020, 1060))
-    slime = (f"<g class='squish'><rect x='1130' y='{G - 30}' width='44' height='30' fill='#3BD16F'/>"
-             f"<rect x='1124' y='{G - 18}' width='56' height='18' fill='#3BD16F'/>"
-             f"<rect x='1140' y='{G - 22}' width='6' height='8' fill='#0F0B1E'/>"
-             f"<rect x='1158' y='{G - 22}' width='6' height='8' fill='#0F0B1E'/>"
-             f"<rect x='1136' y='{G - 28}' width='8' height='4' fill='#9DFFB5'/></g>")
-    heroes = _sprite_g("Kerem", 420, G - 48, 6, "bob") + _sprite_g("Elif", 490, G - 48, 6, "bob2")
+    W, H, G = 1600, 380, 330   # width, height, ground line
+    star_xy = [(40, 20), (130, 60), (220, 30), (330, 14), (420, 70), (520, 26), (610, 52), (700, 18),
+               (790, 64), (880, 30), (960, 12), (1050, 58), (1130, 24), (1180, 80), (1260, 40), (1340, 16),
+               (1420, 66), (1500, 28), (1570, 54), (80, 120), (300, 140), (470, 110), (650, 150), (980, 130),
+               (1110, 160), (1380, 120), (1540, 150), (180, 190), (860, 180), (1290, 200)]
+    stars = "".join(f"<rect x='{x}' y='{y + 30}' width='4' height='4' fill='#F8F8F8'/>" for x, y in star_xy)
+    my = 110   # moon
+    moon = (f"<rect x='1180' y='{my}' width='48' height='48' fill='#FFE9A8'/>"
+            f"<rect x='1170' y='{my + 10}' width='10' height='28' fill='#FFE9A8'/>"
+            f"<rect x='1228' y='{my + 10}' width='10' height='28' fill='#FFE9A8'/>"
+            f"<rect x='1204' y='{my + 10}' width='14' height='14' fill='#F2D27A'/>")
+    mountains = (f"<polygon points='0,{G} 160,170 340,{G}' fill='#2A2155'/>"
+                 f"<polygon points='220,{G} 420,130 620,{G}' fill='#33296A'/>"
+                 f"<polygon points='1020,{G} 1200,160 1380,{G}' fill='#2A2155'/>"
+                 f"<polygon points='1260,{G} 1450,180 1600,{G}' fill='#33296A'/>")
+    cx, top = 740, G - 140   # castle
+    castle = (f"<rect x='{cx}' y='{top + 30}' width='180' height='{G - top - 30}' fill='#1D1640'/>"
+              f"<rect x='{cx - 30}' y='{top}' width='50' height='{G - top}' fill='#241B4D'/>"
+              f"<rect x='{cx + 160}' y='{top}' width='50' height='{G - top}' fill='#241B4D'/>"
+              + "".join(f"<rect x='{x}' y='{top - 12}' width='12' height='12' fill='#241B4D'/>"
+                        for x in (cx - 30, cx - 11, cx + 8, cx + 160, cx + 179, cx + 198))
+              + "".join(f"<rect x='{x}' y='{top + 18}' width='16' height='12' fill='#1D1640'/>"
+                        for x in (cx + 22, cx + 56, cx + 90, cx + 124))
+              + f"<rect x='{cx + 70}' y='{G - 60}' width='40' height='60' fill='#0F0B1E'/>"
+              f"<g class='flick'><rect x='{cx - 14}' y='{top + 40}' width='16' height='22' fill='#FFD23F'/>"
+              f"<rect x='{cx + 176}' y='{top + 40}' width='16' height='22' fill='#FFD23F'/>"
+              f"<rect x='{cx + 50}' y='{G - 80}' width='10' height='16' fill='#FF9F1C'/>"
+              f"<rect x='{cx + 120}' y='{G - 80}' width='10' height='16' fill='#FF9F1C'/></g>")
+    coins = "".join(f"<rect x='{x}' y='{G - 16}' width='12' height='12' fill='#FFD23F'/>"
+                    f"<rect x='{x + 4}' y='{G - 12}' width='4' height='4' fill='#B4410F'/>"
+                    for x in (560, 610, 660, 1020, 1070))
+    slime = (f"<g class='squish'><rect x='1140' y='{G - 42}' width='60' height='42' fill='#3BD16F'/>"
+             f"<rect x='1132' y='{G - 26}' width='76' height='26' fill='#3BD16F'/>"
+             f"<rect x='1154' y='{G - 32}' width='8' height='12' fill='#0F0B1E'/>"
+             f"<rect x='1180' y='{G - 32}' width='8' height='12' fill='#0F0B1E'/>"
+             f"<rect x='1148' y='{G - 38}' width='12' height='6' fill='#9DFFB5'/></g>")
+    heroes = _sprite_g("Kerem", 400, G - 72, 9, "bob") + _sprite_g("Elif", 490, G - 72, 9, "bob2")
     ground = (f"<rect x='0' y='{G + 4}' width='{W}' height='{H - G - 4}' fill='#1F5F33'/>"
               f"<rect x='0' y='{G}' width='{W}' height='4' fill='#3BD16F'/>"
-              + "".join(f"<rect x='{x}' y='{G + 14}' width='16' height='6' fill='#174A28'/>" for x in range(20, W, 90)))
+              + "".join(f"<rect x='{x}' y='{G + 16}' width='18' height='6' fill='#174A28'/>" for x in range(20, W, 90))
+              + "".join(f"<rect x='{x}' y='{G + 32}' width='18' height='6' fill='#174A28'/>" for x in range(65, W, 90)))
     return (f"<svg class='scene' viewBox='0 0 {W} {H}' preserveAspectRatio='xMidYMax slice' "
             "shape-rendering='crispEdges' aria-hidden='true'>"
-            f"<rect width='{W}' height='{H}' fill='#151036'/><rect width='{W}' height='110' fill='#1B1446'/>"
+            f"<rect width='{W}' height='{H}' fill='#151036'/><rect width='{W}' height='220' fill='#1B1446'/>"
+            f"<rect width='{W}' height='120' fill='#20184F'/>"
             f"{stars}{moon}{mountains}{castle}{coins}{slime}{heroes}{ground}</svg>")
 
 
@@ -198,14 +202,14 @@ def _minimap():
     colors = {"#": "#4A3F8C", "K": PLAYERS["Kerem"]["color"], "E": PLAYERS["Elif"]["color"]}
     rects = "".join(f"<rect x='{x * 8}' y='{y * 8}' width='8' height='8' fill='{colors[c]}'/>"
                     for y, row in enumerate(cells) for x, c in enumerate(row) if c != ".")
-    return (f"<svg width='72' height='48' viewBox='0 0 72 48' shape-rendering='crispEdges' aria-label='minimap'>"
+    return (f"<svg width='108' height='72' viewBox='0 0 72 48' shape-rendering='crispEdges' aria-label='minimap'>"
             f"<rect width='72' height='48' fill='#0F0B1E'/>{rects}</svg>")
 
 
 def header(model_name, budget_ms):
     """Top of the screen: the PIXEL KEEP game scene and a full-width game HUD strip."""
     cards = "".join(
-        f"<div class='hcell'><div class='hrow'>{sprite(n, 4)}<div style='flex:1'>"
+        f"<div class='hcell'><div class='hrow'>{sprite(n, 7)}<div style='flex:1'>"
         f"<div class='px hname' style='color:{PLAYERS[n]['color']}'>{esc(n.upper())} "
         f"<span class='hrole'>{esc(PLAYERS[n]['role'])} · Lv 12 · in chat</span></div>"
         f"{_gauge('HP', *HUD[n]['hp'], '#FF4F5E')}{_gauge('MP', *HUD[n]['mp'], '#4CC9F0')}"
