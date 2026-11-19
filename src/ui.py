@@ -27,7 +27,7 @@ SPRITE_COLORS = {"Y": "#FFD23F", "G": "#C0C7D6", "D": "#1D1640", "C": "#4CC9F0",
 
 CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&family=IBM+Plex+Mono:wght@400;600&display=swap');
-.gradio-container { background:#0F0B1E !important; max-width:1400px !important;
+.gradio-container { background:#0F0B1E !important; max-width:100% !important; width:100% !important;
   font-family:'IBM Plex Mono', 'Courier New', monospace !important; }
 .gradio-container label, .gradio-container .label-wrap span {
   font-family:'Pixelify Sans', 'IBM Plex Mono', monospace !important; font-size:17px !important; }
@@ -42,7 +42,7 @@ CSS = """
 
 .px { font-family:'Pixelify Sans', 'IBM Plex Mono', monospace; }
 .vt { font-family:'IBM Plex Mono', 'Courier New', monospace; }
-.stage { position:relative; overflow:hidden; border:4px solid #F8F8F8; box-shadow:6px 6px 0 #000; height:190px; background:#0F0B1E; }
+.stage { position:relative; overflow:hidden; border:4px solid #F8F8F8; box-shadow:6px 6px 0 #000; height:250px; background:#0F0B1E; }
 .stage svg.scene { position:absolute; left:0; top:0; width:100%; height:100%; }
 .stage .crt { position:absolute; inset:0; pointer-events:none;
   background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.22) 3px); }
@@ -55,11 +55,24 @@ CSS = """
 .modon { background:#3BD16F; color:#0F0B1E; text-shadow:none; padding:4px 10px; border:3px solid #F8F8F8; font-weight:700;
   animation:blink 1.2s steps(2,start) infinite; }
 @keyframes blink { 50% { opacity:.55; } }
-.party { display:flex; gap:12px; margin-top:12px; }
-.member { display:flex; align-items:center; gap:10px; background:#1D1640; border:3px solid #F8F8F8; padding:6px 12px; }
-.member .nm { font-size:17px; font-weight:700; }
-.member .rl { font-size:13px; color:#B8B0D8; }
-
+.scene .bob { animation:bob .9s steps(2,end) infinite; }
+.scene .bob2 { animation:bob .9s steps(2,end) .45s infinite; }
+.scene .flick { animation:flick .7s steps(2,end) infinite; }
+.scene .squish { animation:squish 1.1s steps(2,end) infinite; transform-box:fill-box; transform-origin:50% 100%; }
+@keyframes bob { 50% { transform:translateY(-6px); } }
+@keyframes flick { 50% { opacity:.35; } }
+@keyframes squish { 50% { transform:scale(1.1, .85); } }
+.hudbar { display:grid; grid-template-columns:1fr 1fr 1.4fr .8fr auto; gap:12px; margin-top:12px; }
+.hcell { background:#1D1640; border:3px solid #F8F8F8; box-shadow:4px 4px 0 #000; padding:8px 12px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+.hrow { display:flex; align-items:center; gap:12px; }
+.hname { font-size:17px; font-weight:700; }
+.hrole { font-size:12px; color:#B8B0D8; font-family:'IBM Plex Mono', monospace; }
+.stat { display:grid; grid-template-columns:28px minmax(0,1fr) 64px; gap:8px; align-items:center; font-size:12px; color:#E0DAF5; font-family:'IBM Plex Mono', monospace; }
+.gauge { height:10px; background:#0F0B1E; border:2px solid #F8F8F8; }
+.gauge i { display:block; height:100%; }
+.hlabel { font-size:13px; color:#FFD23F; font-weight:700; letter-spacing:1px; }
+.hbig { font-size:17px; color:#F8F8F8; }
+.hsmall { font-size:12px; color:#B8B0D8; font-family:'IBM Plex Mono', monospace; }
 .tabs { display:flex; gap:8px; margin:14px 0 8px; }
 .tab { font-size:15px; padding:6px 12px; border:3px solid #F8F8F8; color:#B8B0D8; background:#1D1640; }
 .tab.on { background:#FFD23F; color:#1D1640; font-weight:700; }
@@ -116,43 +129,96 @@ def sprite(player, scale=4):
             f"aria-label='{esc(player)}'>{rects}</svg>")
 
 
+def _sprite_g(player, x, y, scale, cls):
+    rows = SPRITES[player]
+    rects = "".join(
+        f"<rect x='{x + cx * scale}' y='{y + cy * scale}' width='{scale}' height='{scale}' fill='{SPRITE_COLORS[c]}'/>"
+        for cy, row in enumerate(rows) for cx, c in enumerate(row) if c != "."
+    )
+    return f"<g class='{cls}'>{rects}</g>"
+
+
 def _scene():
-    """Pixel-art night scene: stars, moon, mountains, castle, ground (pure SVG shapes)."""
+    """Pixel-art game scene: night sky, mountains, castle with torches, the two
+    party members walking towards a slime, coins on the ground (pure SVG)."""
+    W, H, G = 1600, 250, 214   # width, height, ground line
     stars = "".join(f"<rect x='{x}' y='{y}' width='4' height='4' fill='#F8F8F8'/>"
                     for x, y in [(40, 20), (130, 60), (220, 30), (330, 14), (420, 70), (520, 26), (610, 52),
-                                 (700, 18), (790, 64), (880, 30), (960, 12), (1050, 58), (1130, 24), (1180, 80)])
-    moon = ("<rect x='840' y='20' width='40' height='40' fill='#FFE9A8'/>"
-            "<rect x='832' y='28' width='8' height='24' fill='#FFE9A8'/>"
-            "<rect x='880' y='28' width='8' height='24' fill='#FFE9A8'/>"
-            "<rect x='860' y='28' width='12' height='12' fill='#F2D27A'/>")
-    mountains = ("<polygon points='0,190 120,90 230,190' fill='#2A2155'/>"
-                 "<polygon points='160,190 300,70 450,190' fill='#33296A'/>"
-                 "<polygon points='760,190 900,80 1040,190' fill='#2A2155'/>"
-                 "<polygon points='980,190 1100,100 1200,190' fill='#33296A'/>")
-    castle = ("<rect x='560' y='100' width='120' height='90' fill='#1D1640'/>"
-              "<rect x='540' y='80' width='36' height='110' fill='#241B4D'/>"
-              "<rect x='664' y='80' width='36' height='110' fill='#241B4D'/>"
-              + "".join(f"<rect x='{x}' y='72' width='10' height='10' fill='#241B4D'/>"
-                        for x in (540, 556, 566, 664, 680, 690))
-              + "".join(f"<rect x='{x}' y='92' width='12' height='10' fill='#1D1640'/>" for x in (576, 600, 624, 648))
-              + "<rect x='608' y='150' width='24' height='40' fill='#0F0B1E'/>"
-              "<rect x='552' y='110' width='10' height='14' fill='#FFD23F'/>"
-              "<rect x='678' y='110' width='10' height='14' fill='#FFD23F'/>")
-    ground = ("<rect x='0' y='176' width='1200' height='14' fill='#1F5F33'/>"
-              "<rect x='0' y='172' width='1200' height='4' fill='#3BD16F'/>")
-    return ("<svg class='scene' viewBox='0 0 1200 190' preserveAspectRatio='xMidYMid slice' "
+                                 (700, 18), (790, 64), (880, 30), (960, 12), (1050, 58), (1130, 24), (1180, 80),
+                                 (1260, 40), (1340, 16), (1420, 66), (1500, 28), (1570, 54)])
+    moon = ("<rect x='1180' y='54' width='40' height='40' fill='#FFE9A8'/>"
+            "<rect x='1172' y='62' width='8' height='24' fill='#FFE9A8'/>"
+            "<rect x='1220' y='62' width='8' height='24' fill='#FFE9A8'/>"
+            "<rect x='1200' y='62' width='12' height='12' fill='#F2D27A'/>")
+    mountains = (f"<polygon points='0,{G} 140,100 300,{G}' fill='#2A2155'/>"
+                 f"<polygon points='200,{G} 380,80 560,{G}' fill='#33296A'/>"
+                 f"<polygon points='1040,{G} 1200,96 1360,{G}' fill='#2A2155'/>"
+                 f"<polygon points='1280,{G} 1450,110 1600,{G}' fill='#33296A'/>")
+    cx = 760   # castle
+    castle = (f"<rect x='{cx}' y='120' width='140' height='{G - 120}' fill='#1D1640'/>"
+              f"<rect x='{cx - 24}' y='96' width='40' height='{G - 96}' fill='#241B4D'/>"
+              f"<rect x='{cx + 124}' y='96' width='40' height='{G - 96}' fill='#241B4D'/>"
+              + "".join(f"<rect x='{x}' y='86' width='10' height='10' fill='#241B4D'/>"
+                        for x in (cx - 24, cx - 7, cx + 6, cx + 124, cx + 141, cx + 154))
+              + "".join(f"<rect x='{x}' y='110' width='14' height='10' fill='#1D1640'/>"
+                        for x in (cx + 18, cx + 46, cx + 74, cx + 102))
+              + f"<rect x='{cx + 54}' y='{G - 46}' width='32' height='46' fill='#0F0B1E'/>"
+              f"<g class='flick'><rect x='{cx - 12}' y='130' width='12' height='16' fill='#FFD23F'/>"
+              f"<rect x='{cx + 136}' y='130' width='12' height='16' fill='#FFD23F'/>"
+              f"<rect x='{cx + 40}' y='{G - 60}' width='8' height='12' fill='#FF9F1C'/>"
+              f"<rect x='{cx + 92}' y='{G - 60}' width='8' height='12' fill='#FF9F1C'/></g>")
+    coins = "".join(f"<rect x='{x}' y='{G - 14}' width='10' height='10' fill='#FFD23F'/>"
+                    f"<rect x='{x + 3}' y='{G - 11}' width='4' height='4' fill='#B4410F'/>"
+                    for x in (560, 600, 640, 1020, 1060))
+    slime = (f"<g class='squish'><rect x='1130' y='{G - 30}' width='44' height='30' fill='#3BD16F'/>"
+             f"<rect x='1124' y='{G - 18}' width='56' height='18' fill='#3BD16F'/>"
+             f"<rect x='1140' y='{G - 22}' width='6' height='8' fill='#0F0B1E'/>"
+             f"<rect x='1158' y='{G - 22}' width='6' height='8' fill='#0F0B1E'/>"
+             f"<rect x='1136' y='{G - 28}' width='8' height='4' fill='#9DFFB5'/></g>")
+    heroes = _sprite_g("Kerem", 420, G - 48, 6, "bob") + _sprite_g("Elif", 490, G - 48, 6, "bob2")
+    ground = (f"<rect x='0' y='{G + 4}' width='{W}' height='{H - G - 4}' fill='#1F5F33'/>"
+              f"<rect x='0' y='{G}' width='{W}' height='4' fill='#3BD16F'/>"
+              + "".join(f"<rect x='{x}' y='{G + 14}' width='16' height='6' fill='#174A28'/>" for x in range(20, W, 90)))
+    return (f"<svg class='scene' viewBox='0 0 {W} {H}' preserveAspectRatio='xMidYMax slice' "
             "shape-rendering='crispEdges' aria-hidden='true'>"
-            "<rect width='1200' height='190' fill='#151036'/><rect width='1200' height='90' fill='#1B1446'/>"
-            f"{stars}{moon}{mountains}{castle}{ground}</svg>")
+            f"<rect width='{W}' height='{H}' fill='#151036'/><rect width='{W}' height='110' fill='#1B1446'/>"
+            f"{stars}{moon}{mountains}{castle}{coins}{slime}{heroes}{ground}</svg>")
+
+
+HUD = {"Kerem": {"hp": (82, 100), "mp": (40, 60)}, "Elif": {"hp": (64, 80), "mp": (95, 120)}}
+
+
+def _gauge(label, cur, mx, color):
+    return (f"<div class='stat'><span>{label}</span><div class='gauge'>"
+            f"<i style='width:{cur / mx * 100:.0f}%;background:{color}'></i></div><span>{cur}/{mx}</span></div>")
+
+
+def _minimap():
+    cells = ["....#....", ".###.###.", ".#.....#.", ".#..K..#.", ".###E###.", "....#...."]
+    colors = {"#": "#4A3F8C", "K": PLAYERS["Kerem"]["color"], "E": PLAYERS["Elif"]["color"]}
+    rects = "".join(f"<rect x='{x * 8}' y='{y * 8}' width='8' height='8' fill='{colors[c]}'/>"
+                    for y, row in enumerate(cells) for x, c in enumerate(row) if c != ".")
+    return (f"<svg width='72' height='48' viewBox='0 0 72 48' shape-rendering='crispEdges' aria-label='minimap'>"
+            f"<rect width='72' height='48' fill='#0F0B1E'/>{rects}</svg>")
 
 
 def header(model_name, budget_ms):
-    """Top of the screen: the PIXEL KEEP title scene, HUD and party bar."""
-    members = "".join(
-        f"<div class='member'>{sprite(n, 3)}<div><div class='px nm' style='color:{PLAYERS[n]['color']}'>"
-        f"{esc(n.upper())}</div><div class='vt rl'>{esc(PLAYERS[n]['role'])} · in chat</div></div></div>"
+    """Top of the screen: the PIXEL KEEP game scene and a full-width game HUD strip."""
+    cards = "".join(
+        f"<div class='hcell'><div class='hrow'>{sprite(n, 4)}<div style='flex:1'>"
+        f"<div class='px hname' style='color:{PLAYERS[n]['color']}'>{esc(n.upper())} "
+        f"<span class='hrole'>{esc(PLAYERS[n]['role'])} · Lv 12 · in chat</span></div>"
+        f"{_gauge('HP', *HUD[n]['hp'], '#FF4F5E')}{_gauge('MP', *HUD[n]['mp'], '#4CC9F0')}"
+        "</div></div></div>"
         for n in GAME["party"]
     )
+    quest = ("<div class='hcell'><div class='px hlabel'>QUEST</div>"
+             "<div class='px hbig'>Defeat the Crystal Golem</div>"
+             f"{_gauge('', 2, 3, '#FFD23F').replace('<span></span>', '<span>◆</span>')}"
+             "<div class='hsmall'>2 of 3 crystals found</div></div>")
+    gold = ("<div class='hcell'><div class='px hlabel'>GOLD</div><div class='px hbig'>◆ 1,240</div>"
+            "<div class='hsmall'>run time 12:47</div></div>")
+    mini = f"<div class='hcell' style='align-items:center'><div class='px hlabel'>MAP</div>{_minimap()}</div>"
     return (
         "<div class='stage'>"
         f"{_scene()}<div class='crt'></div>"
@@ -165,7 +231,7 @@ def header(model_name, budget_ms):
         "<div class='modon'>MOD: ON</div>"
         f"<div class='vt' style='font-size:13px'>{esc(model_name)} · ≤ {budget_ms:.0f} ms · CPU</div>"
         "</div></div></div>"
-        f"<div class='party'>{members}</div>"
+        f"<div class='hudbar'>{cards}{quest}{gold}{mini}</div>"
     )
 
 

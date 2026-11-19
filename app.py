@@ -102,6 +102,8 @@ def clear(model):
 # CSS / dark mode: newer Gradio versions take these in launch(), older ones in Blocks()
 DARK_JS = "() => { document.body.classList.add('dark'); }"
 blocks_kw, launch_kw = {}, {}
+if "fill_width" in inspect.signature(gr.Blocks.__init__).parameters:
+    blocks_kw["fill_width"] = True   # use the whole screen width
 for key, val in (("css", CSS), ("js", DARK_JS)):
     if key in inspect.signature(gr.Blocks.__init__).parameters:
         blocks_kw[key] = val
