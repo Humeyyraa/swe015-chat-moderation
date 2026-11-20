@@ -47,8 +47,8 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open http://127.0.0.1:7860. Colour theme: pink `sakura` by default; the original
-purple night look is kept as `night` (`APP_THEME=night python app.py`). On the first start the trained weights (~540 MB)
+Open http://127.0.0.1:7860. Colour theme: purple `night` by default; a pink
+`sakura` theme is also available (`APP_THEME=sakura python app.py`). On the first start the trained weights (~540 MB)
 are downloaded from the Hugging Face Hub:
 https://huggingface.co/humeyrakoctemiz/swe015-chat-moderation
 

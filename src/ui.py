@@ -30,7 +30,7 @@ SPRITE_COLORS = {"Y": "#FFD23F", "G": "#C0C7D6", "D": "#1D1640", "C": "#4CC9F0",
 
 # ---------------------------------------------------------------- colour themes
 # Every colour of the UI by its job. "night" is the original purple night look;
-# "sakura" is the pink sunset look. Pick one with:  APP_THEME=night python app.py
+# "sakura" is the pink sunset look. Pick one with:  APP_THEME=sakura python app.py
 THEMES = {
     "night": {
         "bg": "#0F0B1E", "panel": "#1D1640", "panel2": "#120D26", "line": "#F8F8F8", "text": "#F8F8F8",
@@ -59,8 +59,8 @@ THEMES = {
         "map_wall": "#8E3F78", "petal": "#FFB7D5",
     },
 }
-THEME_NAME = os.environ.get("APP_THEME", "sakura")
-T = THEMES.get(THEME_NAME, THEMES["sakura"])
+THEME_NAME = os.environ.get("APP_THEME", "night")
+T = THEMES.get(THEME_NAME, THEMES["night"])
 
 _CSS_TEMPLATE = """
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&family=IBM+Plex+Mono:wght@400;600&display=swap');
